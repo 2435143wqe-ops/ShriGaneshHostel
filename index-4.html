@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#2B2118" />
+<title>Shri Ganesh Hostel</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: #FBF7F0; overscroll-behavior-y: contain; }
+  body { font-family: 'Inter', -apple-system, sans-serif; }
+  input:focus, select:focus, button:focus { outline: 2px solid #B4501F; outline-offset: 1px; }
+  select { font-family: 'Inter', sans-serif; }
+  ::selection { background: #FBEFE2; }
+  #fallback { display:none; padding:40px 20px; text-align:center; font-family: -apple-system, sans-serif; color:#2B2118; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="fallback">
+  <h2>Couldn't load the app</h2>
+  <p>Please check your internet connection and reload. If this keeps happening, contact the hostel admin.</p>
+</div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+<script>
+window.addEventListener('error', function(e) {
+  console.error('App error:', e.message);
+});
+
+function startApp() {
+if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
+  document.getElementById('fallback').style.display = 'block';
+  return;
+}
+
+const { useState, useEffect, createElement: h } = React;
+
+const API_URL = "https://script.google.com/macros/s/AKfycby_ef7-MjNtCmHiL9tC4-Mv2jciUlov-09yLzzqFH58CM9nO3bz3NUjPMAr65wCso4K/exec";
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+async function apiPost(payload) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+function formatCurrency(n) {
+  const num = Number(n) || 0;
+  return "₹" + num.toLocaleString("en-IN");
+}
+
+function svgIcon(children, extraProps) {
+  return function(props) {
+    return h("svg", Object.assign({
+      viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+      strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round"
+    }, extraProps || {}, props), children);
+  };
+}
+
+const Icon = {
+  menu: svgIcon([
+    h("line", {key:1, x1:4,y1:7,x2:20,y2:7}),
+    h("line", {key:2, x1:4,y1:12,x2:20,y2:12}),
+    h("line", {key:3, x1:4,y1:17,x2:20,y2:17}),
+  ]),
+  close: svgIcon([
+    h("line", {key:1, x1:5,y1:5,x2:19,y2:19}),
+    h("line", {key:2, x1:19,y1:5,x2:5,y2:19}),
+  ]),
+  dashboard: svgIcon([
+    h("rect", {key:1, x:3,y:3,width:7,height:9,rx:1.5}),
+    h("rect", {key:2, x:14,y:3,width:7,height:5,rx:1.5}),
+    h("rect", {key:3, x:14,y:12,width:7,height:9,rx:1.5}),
+    h("rect", {key:4, x:3,y:16,width:7,height:5,rx:1.5}),
+  ]),
+  ledger: svgIcon([
+    h("path", {key:1, d:"M4 19.5A2.5 2.5 0 0 1 6.5 17H20"}),
+    h("path", {key:2, d:"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"}),
+  ]),
+  bell: svgIcon([
+    h("path", {key:1, d:"M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"}),
+    h("path", {key:2, d:"M13.73 21a2 2 0 0 1-3.46 0"}),
+  ]),
+  logout: svgIcon([
+    h("path", {key:1, d:"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"}),
+    h("polyline", {key:2, points:"16 17 21 12 16 7"}),
+    h("line", {key:3, x1:21,y1:12,x2:9,y2:12}),
+  ]),
+  chevronDown: svgIcon([h("polyline", {points:"6 9 12 15 18 9"})]),
+  rupee: svgIcon([h("path", {d:"M6 3h12M6 8h12M6 13l8.5 8M6 13h3a4.5 4.5 0 0 0 0-9"})]),
+  zap: svgIcon([h("polygon", {points:"13 2 3 14 12 14 11 22 21 10 12 10 13 2"})]),
+  history: svgIcon([
+    h("path", {key:1, d:"M3 3v5h5"}),
+    h("path", {key:2, d:"M3.05 13A9 9 0 1 0 6 5.3L3 8"}),
+    h("path", {key:3, d:"M12 7v5l4 2"}),
+  ]),
+  calendar: svgIcon([
+    h("rect", {key:1, x:3,y:4,width:18,height:18,rx:2}),
+    h("line", {key:2, x1:16,y1:2,x2:16,y2:6}),
+    h("line", {key:3, x1:8,y1:2,x2:8,y2:6}),
+    h("line", {key:4, x1:3,y1:10,x2:21,y2:10}),
+  ]),
+  check: svgIcon([
+    h("path", {key:1, d:"M22 11.08V12a10 10 0 1 1-5.93-9.14"}),
+    h("polyline", {key:2, points:"22 4 12 14.01 9 11.01"}),
+  ]),
+  alert: svgIcon([
+    h("circle", {key:1, cx:12,cy:12,r:10}),
+    h("line", {key:2, x1:12,y1:8,x2:12,y2:12}),
+    h("line", {key:3, x1:12,y1:16,x2:12.01,y2:16}),
+  ]),
+};
+
+const S = {
+  appShell: { minHeight:"100vh", background:"#FBF7F0", color:"#2B2118" },
+  header: { display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 18px", background:"#FBF7F0", borderBottom:"1px solid #EDE3D3", position:"sticky", top:0, zIndex:10 },
+  headerTitle: { fontFamily:"'Fraunces', Georgia, serif", fontWeight:600, fontSize:17, letterSpacing:"-0.01em" },
+  iconBtn: { background:"none", border:"none", padding:6, cursor:"pointer", color:"#2B2118", display:"flex" },
+  overlay: { position:"fixed", inset:0, background:"rgba(43,33,24,0.4)", zIndex:20, display:"flex" },
+  drawer: { width:"78%", maxWidth:300, background:"#FFFDF9", height:"100%", padding:"20px 18px", display:"flex", flexDirection:"column", boxShadow:"2px 0 24px rgba(0,0,0,0.12)" },
+  drawerHead: { display:"flex", justifyContent:"space-between", alignItems:"flex-start", paddingBottom:16, borderBottom:"1px solid #EDE3D3" },
+  drawerName: { fontWeight:700, fontSize:15 },
+  drawerRoom: { fontSize:13, color:"#8A7A68", marginTop:2 },
+  navItem: { display:"flex", alignItems:"center", gap:12, padding:"12px 14px", borderRadius:10, border:"none", fontSize:15, fontWeight:600, cursor:"pointer", textAlign:"left" },
+  logoutBtn: { marginTop:"auto", display:"flex", alignItems:"center", gap:10, padding:"12px 14px", background:"none", border:"1px solid #EDE3D3", borderRadius:10, color:"#B23A2F", fontWeight:600, fontSize:14, cursor:"pointer" },
+  page: { padding:"20px 18px 40px", maxWidth:480, margin:"0 auto" },
+  heroCard: { background:"#2B2118", borderRadius:18, padding:"22px 20px", color:"#FBF7F0", borderLeft:"5px solid" },
+  heroTop: { display:"flex", justifyContent:"space-between", alignItems:"flex-start" },
+  heroLabel: { fontSize:13, color:"#C9B8A3", marginBottom:6, fontWeight:500 },
+  heroAmount: { fontFamily:"'Fraunces', Georgia, serif", fontSize:36, fontWeight:600 },
+  heroFoot: { display:"flex", alignItems:"center", gap:6, marginTop:16, fontSize:13, color:"#C9B8A3" },
+  pill: { display:"flex", alignItems:"center", gap:5, padding:"5px 10px", borderRadius:20, fontSize:12.5, fontWeight:700 },
+  sectionTitle: { fontFamily:"'Fraunces', Georgia, serif", fontSize:18, fontWeight:600, margin:"26px 0 12px" },
+  breakdownCard: { background:"#FFFDF9", border:"1px solid #EDE3D3", borderRadius:16, padding:"16px 18px" },
+  breakdownRow: { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", fontSize:14.5 },
+  divider: { height:1, background:"#EDE3D3", margin:"6px 0" },
+  meterCard: { marginTop:16, background:"#FBEFE2", borderRadius:16, padding:"16px 18px" },
+  meterTitle: { fontSize:13, fontWeight:700, color:"#8A5A2B", marginBottom:10 },
+  meterRow: { display:"flex", alignItems:"center", gap:14 },
+  meterVal: { fontSize:20, fontWeight:800, color:"#2B2118" },
+  meterCap: { fontSize:11.5, color:"#8A7A68", marginTop:2 },
+  meterArrow: { color:"#B4501F", fontSize:18 },
+  dropdownRow: { display:"flex", gap:10, marginBottom:16 },
+  dropdownWrap: { position:"relative", flex:1 },
+  dropdown: { width:"100%", padding:"11px 32px 11px 14px", borderRadius:10, border:"1px solid #EDE3D3", background:"#FFFDF9", fontSize:14.5, fontWeight:600, color:"#2B2118", appearance:"none", cursor:"pointer" },
+  dropdownIcon: { position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", color:"#8A7A68" },
+  noteCard: { display:"flex", gap:12, background:"#FFFDF9", border:"1px solid #EDE3D3", borderRadius:14, padding:"14px 16px" },
+  noteDot: { width:8, height:8, borderRadius:99, background:"#B4501F", marginTop:6, flexShrink:0 },
+  noteMeta: { fontSize:12, color:"#8A7A68", fontWeight:600, marginBottom:4 },
+  noteText: { fontSize:14.5, lineHeight:1.5 },
+  mutedNote: { color:"#8A7A68", fontSize:14.5, marginTop:8 },
+  errorNote: { color:"#B23A2F", fontSize:14.5, marginTop:8 },
+  loginWrap: { minHeight:"100vh", background:"#2B2118", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20 },
+  loginCard: { background:"#FBF7F0", borderRadius:22, padding:"36px 28px", width:"100%", maxWidth:380, textAlign:"center" },
+  emblem: { width:52, height:52, borderRadius:99, background:"#FBEFE2", color:"#B4501F", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, margin:"0 auto 16px", fontWeight:800, fontFamily:"'Fraunces', Georgia, serif" },
+  loginTitle: { fontFamily:"'Fraunces', Georgia, serif", fontSize:24, fontWeight:600, color:"#2B2118" },
+  loginSub: { fontSize:13.5, color:"#8A7A68", marginTop:4, letterSpacing:"0.02em", textTransform:"uppercase" },
+  label: { display:"block", fontSize:12.5, fontWeight:700, color:"#6B5D4F", marginBottom:6, textAlign:"left" },
+  input: { width:"100%", padding:"13px 14px", borderRadius:10, border:"1px solid #EDE3D3", background:"#FFFDF9", fontSize:15, boxSizing:"border-box" },
+  errorBox: { display:"flex", alignItems:"center", gap:7, background:"#FBEAEA", color:"#B23A2F", padding:"10px 12px", borderRadius:8, fontSize:13, marginTop:14, textAlign:"left" },
+  loginBtn: { width:"100%", marginTop:22, padding:"13px", borderRadius:10, border:"none", background:"#B4501F", color:"#FFF", fontWeight:700, fontSize:15, cursor:"pointer" },
+  footerNote: { color:"#8A7A68", fontSize:13, marginTop:20 },
+};
+
+function StatusPill(props) {
+  const status = props.status;
+  const isPaid = String(status).trim().toLowerCase() === "paid";
+  return h("span", { style: Object.assign({}, S.pill, { background: isPaid ? "#E9F3EC" : "#FBEAEA", color: isPaid ? "#1F6D3F" : "#B23A2F" }) },
+    isPaid ? h(Icon.check, {width:14,height:14}) : h(Icon.alert, {width:14,height:14}),
+    isPaid ? "Paid" : "Pending"
+  );
+}
+
+function BreakdownRow(props) {
+  const icon = props.icon, label = props.label, value = props.value, bold = props.bold;
+  return h("div", { style: S.breakdownRow },
+    h("span", { style: { display:"flex", alignItems:"center", gap:8, color: bold ? "#2B2118" : "#6B5D4F", fontWeight: bold ? 700 : 500 } }, icon, label),
+    h("span", { style: { fontWeight: bold ? 800 : 600, color:"#2B2118", fontSize: bold ? 18 : 15 } }, value)
+  );
+}
+
+function LoginScreen(props) {
+  const onLogin = props.onLogin;
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!username || !password) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await apiPost({ action: "login", username: username, password: password });
+      if (res.success) onLogin(username, password, res.data);
+      else setError(res.error || "Invalid username or password.");
+    } catch (err) {
+      setError("Couldn't reach the server. Check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return h("div", { style: S.loginWrap },
+    h("div", { style: S.loginCard },
+      h("div", { style: S.emblem }, "SG"),
+      h("h1", { style: S.loginTitle }, "Shri Ganesh Hostel"),
+      h("p", { style: S.loginSub }, "Tenant Portal"),
+      h("form", { onSubmit: handleSubmit, style: { marginTop: 32 } },
+        h("label", { style: S.label }, "Username"),
+        h("input", { style: S.input, value: username, onChange: (e)=>setUsername(e.target.value), placeholder: "Assigned username", autoCapitalize: "none" }),
+        h("label", { style: Object.assign({}, S.label, {marginTop:16}) }, "Password"),
+        h("input", { style: S.input, type: "password", value: password, onChange: (e)=>setPassword(e.target.value), placeholder: "Assigned password" }),
+        error ? h("div", { style: S.errorBox }, h(Icon.alert, {width:16,height:16,strokeWidth:2.5}), h("span", null, error)) : null,
+        h("button", { type: "submit", style: S.loginBtn, disabled: loading }, loading ? "Signing in…" : "Sign in")
+      )
+    ),
+    h("p", { style: S.footerNote }, "Room rent & ledger, in one place.")
+  );
+}
+
+function Dashboard(props) {
+  const tenant = props.tenant;
+  if (!tenant) return null;
+  const isPaid = String(tenant.status).trim().toLowerCase() === "paid";
+  return h("div", { style: S.page },
+    h("div", { style: Object.assign({}, S.heroCard, { borderColor: isPaid ? "#1F6D3F" : "#B23A2F" }) },
+      h("div", { style: S.heroTop },
+        h("div", null,
+          h("p", { style: S.heroLabel }, tenant.month + " " + tenant.year + " · Room " + tenant.roomNo),
+          h("p", { style: S.heroAmount }, formatCurrency(tenant.totalRent))
+        ),
+        h(StatusPill, { status: tenant.status })
+      ),
+      h("div", { style: S.heroFoot }, h(Icon.calendar, {width:15,height:15}), h("span", null, "Due by " + tenant.dueDate + " · ₹50/day after due date"))
+    ),
+    h("h2", { style: S.sectionTitle }, "Bill breakdown"),
+    h("div", { style: S.breakdownCard },
+      h(BreakdownRow, { icon: h(Icon.rupee,{width:16,height:16}), label: "Monthly rent", value: formatCurrency(tenant.baseRent) }),
+      h(BreakdownRow, { icon: h(Icon.history,{width:16,height:16}), label: "Previous balance", value: formatCurrency(tenant.prevBalance) }),
+      h(BreakdownRow, { icon: h(Icon.zap,{width:16,height:16}), label: "Electricity (" + tenant.unitsConsumed + " units × ₹10)", value: formatCurrency(tenant.electricityCost) }),
+      h("div", { style: S.divider }),
+      h(BreakdownRow, { label: "Total bill for " + tenant.month, value: formatCurrency(tenant.totalRent), bold: true })
+    ),
+    h("div", { style: S.meterCard },
+      h("p", { style: S.meterTitle }, "Meter reading"),
+      h("div", { style: S.meterRow },
+        h("div", null, h("p", { style: S.meterVal }, tenant.prevReading), h("p", { style: S.meterCap }, "Previous")),
+        h("span", { style: S.meterArrow }, "→"),
+        h("div", null, h("p", { style: S.meterVal }, tenant.currReading), h("p", { style: S.meterCap }, "Current")),
+        h("div", { style: { marginLeft:"auto", textAlign:"right" } },
+          h("p", { style: Object.assign({}, S.meterVal, {color:"#B4501F"}) }, tenant.unitsConsumed),
+          h("p", { style: S.meterCap }, "Units used")
+        )
+      )
+    )
+  );
+}
+
+function Dropdown(props) {
+  const value = props.value, options = props.options, onChange = props.onChange;
+  return h("div", { style: S.dropdownWrap },
+    h("select", {
+      value: value == null ? "" : value,
+      onChange: (e) => { const v = e.target.value; onChange(isNaN(Number(v)) ? v : Number(v)); },
+      style: S.dropdown
+    }, options.map((o) => h("option", { key: o, value: o }, o))),
+    h(Icon.chevronDown, { width:16, height:16, style: S.dropdownIcon })
+  );
+}
+
+function Ledger(props) {
+  const username = props.username, password = props.password;
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [year, setYear] = useState(null);
+  const [month, setMonth] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await apiPost({ action: "getLedger", username: username, password: password });
+        if (cancelled) return;
+        if (res.success) {
+          setEntries(res.data);
+          if (res.data.length > 0) { setYear(res.data[0].year); setMonth(res.data[0].month); }
+        } else setError(res.error || "Couldn't load ledger.");
+      } catch (e) { if (!cancelled) setError("Couldn't reach the server."); }
+      finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [username, password]);
+
+  const years = Array.from(new Set(entries.map(function(e){return e.year;}))).sort(function(a,b){return b-a;});
+  const monthsForYear = Array.from(new Set(entries.filter(function(e){return e.year===year;}).map(function(e){return e.month;}))).sort(function(a,b){return MONTHS.indexOf(b)-MONTHS.indexOf(a);});
+  const selected = entries.find(function(e){return e.year===year && e.month===month;});
+
+  if (loading) return h("div", { style: S.page }, h("p", { style: S.mutedNote }, "Loading ledger…"));
+  if (error) return h("div", { style: S.page }, h("p", { style: S.errorNote }, error));
+  if (entries.length === 0) return h("div", { style: S.page }, h("p", { style: S.mutedNote }, "No ledger entries yet."));
+
+  return h("div", { style: S.page },
+    h("h2", { style: S.sectionTitle }, "Monthly ledger"),
+    h("div", { style: S.dropdownRow },
+      h(Dropdown, { value: year, options: years, onChange: function(y){ setYear(y); const ms = entries.filter(function(e){return e.year===y;}).map(function(e){return e.month;}); if(ms.indexOf(month)===-1) setMonth(ms[0]); } }),
+      h(Dropdown, { value: month, options: monthsForYear, onChange: setMonth })
+    ),
+    selected ? h("div", { style: S.breakdownCard },
+      h("div", { style: { display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 } },
+        h("p", { style: { fontWeight:700, fontSize:15 } }, selected.month + " " + selected.year),
+        h(StatusPill, { status: selected.status })
+      ),
+      h(BreakdownRow, { icon: h(Icon.rupee,{width:16,height:16}), label: "Monthly rent", value: formatCurrency(selected.baseRent) }),
+      h(BreakdownRow, { icon: h(Icon.history,{width:16,height:16}), label: "Previous balance", value: formatCurrency(selected.prevBalance) }),
+      h(BreakdownRow, { icon: h(Icon.zap,{width:16,height:16}), label: "Electricity (" + selected.unitsConsumed + " units × ₹10)", value: formatCurrency(selected.electricityCost) }),
+      h("div", { style: S.divider }),
+      h(BreakdownRow, { label: "Total bill", value: formatCurrency(selected.totalRent), bold: true }),
+      h("div", { style: { marginTop:12, display:"flex", alignItems:"center", gap:6, color:"#6B5D4F", fontSize:13 } },
+        h(Icon.calendar, {width:14,height:14}), h("span", null, "Due by " + selected.dueDate)
+      )
+    ) : h("p", { style: S.mutedNote }, "No entry for this month.")
+  );
+}
+
+function Notifications(props) {
+  const username = props.username, password = props.password;
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiPost({ action: "getNotifications", username: username, password: password });
+        if (cancelled) return;
+        if (res.success) setNotes(res.data);
+        else setError(res.error || "Couldn't load notifications.");
+      } catch (e) { if (!cancelled) setError("Couldn't reach the server."); }
+      finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [username, password]);
+
+  return h("div", { style: S.page },
+    h("h2", { style: S.sectionTitle }, "Notifications"),
+    loading ? h("p", { style: S.mutedNote }, "Loading…") : null,
+    error ? h("p", { style: S.errorNote }, error) : null,
+    (!loading && !error && notes.length===0) ? h("p", { style: S.mutedNote }, "No notifications yet.") : null,
+    h("div", { style: { display:"flex", flexDirection:"column", gap:10 } },
+      notes.map(function(n,i) { return h("div", { key:i, style: S.noteCard },
+        h("div", { style: S.noteDot }),
+        h("div", null, h("p", { style: S.noteMeta }, n.month + " " + n.year), h("p", { style: S.noteText }, n.message))
+      ); })
+    )
+  );
+}
+
+function App() {
+  const [auth, setAuth] = useState(null);
+  const [tenant, setTenant] = useState(null);
+  const [page, setPage] = useState("dashboard");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogin = function(username, password, data) { setAuth({username: username, password: password}); setTenant(data); };
+  const handleLogout = function() { setAuth(null); setTenant(null); setPage("dashboard"); };
+
+  if (!auth) return h(LoginScreen, { onLogin: handleLogin });
+
+  function navItem(key, label, IconCmp) {
+    return h("button", {
+      onClick: function(){ setPage(key); setMenuOpen(false); },
+      style: Object.assign({}, S.navItem, { background: page===key ? "#FBEFE2" : "transparent", color: page===key ? "#B4501F" : "#2B2118" })
+    }, h(IconCmp, {width:18,height:18}), h("span", null, label));
+  }
+
+  return h("div", { style: S.appShell },
+    h("header", { style: S.header },
+      h("button", { onClick: function(){setMenuOpen(true);}, style: S.iconBtn, "aria-label": "Open menu" }, h(Icon.menu, {width:22,height:22})),
+      h("span", { style: S.headerTitle }, "Shri Ganesh Hostel"),
+      h("div", { style: { width:22 } })
+    ),
+    menuOpen ? h("div", { style: S.overlay, onClick: function(){setMenuOpen(false);} },
+      h("div", { style: S.drawer, onClick: function(e){e.stopPropagation();} },
+        h("div", { style: S.drawerHead },
+          h("div", null,
+            h("p", { style: S.drawerName }, auth.username),
+            h("p", { style: S.drawerRoom }, tenant ? ("Room " + tenant.roomNo) : "")
+          ),
+          h("button", { onClick: function(){setMenuOpen(false);}, style: S.iconBtn, "aria-label": "Close menu" }, h(Icon.close, {width:20,height:20}))
+        ),
+        h("nav", { style: { display:"flex", flexDirection:"column", gap:4, marginTop:20 } },
+          navItem("dashboard", "Dashboard", Icon.dashboard),
+          navItem("ledger", "Ledger", Icon.ledger),
+          navItem("notifications", "Notifications", Icon.bell)
+        ),
+        h("button", { onClick: handleLogout, style: S.logoutBtn }, h(Icon.logout, {width:17,height:17}), h("span", null, "Sign out"))
+      )
+    ) : null,
+    h("main", null,
+      page==="dashboard" ? h(Dashboard, { tenant: tenant }) : null,
+      page==="ledger" ? h(Ledger, { username: auth.username, password: auth.password }) : null,
+      page==="notifications" ? h(Notifications, { username: auth.username, password: auth.password }) : null
+    )
+  );
+}
+
+const rootEl = document.getElementById("root");
+const root = ReactDOM.createRoot(rootEl);
+root.render(h(App));
+
+}
+
+if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
+  startApp();
+} else {
+  window.addEventListener('load', function() {
+    setTimeout(startApp, 100);
+  });
+}
+</script>
+</body>
+</html>
